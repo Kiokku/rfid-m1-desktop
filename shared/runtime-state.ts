@@ -1,26 +1,43 @@
 export type RuntimeState = {
   build: 'development' | 'production'
   platform: 'macOS' | 'Windows' | '其他系统'
-  backend: '未装配'
+  backend: 'MockBackendClient（仅开发）' | '未装配'
   reader: '未装配'
+  session: SessionState
   message: string
 }
 
-type RuntimeStateInput = {
+export type SessionState =
+  | { status: '未登录' }
+  | { status: '已登录'; operatorName: string }
+
+export type LoginRequest = {
+  username: string
+  password: string
+}
+
+export type DesktopEnvironment = {
   isPackaged: boolean
   platform: NodeJS.Platform
 }
 
-export function createRuntimeState({ isPackaged, platform }: RuntimeStateInput): RuntimeState {
+type RuntimeStateInput = DesktopEnvironment & {
+  backend?: RuntimeState['backend']
+  session?: SessionState
+  message?: string
+}
+
+export function createRuntimeState({ isPackaged, platform, backend = '未装配', session = { status: '未登录' }, message }: RuntimeStateInput): RuntimeState {
   const isMacOS = platform === 'darwin'
   return {
     build: isPackaged ? 'production' : 'development',
     platform: isMacOS ? 'macOS' : platform === 'win32' ? 'Windows' : '其他系统',
-    backend: '未装配',
+    backend,
     reader: '未装配',
-    message: isMacOS
+    session,
+    message: message ?? (isMacOS
       ? 'macOS 开发阶段：真实接口与读卡器将在 Windows 阶段接入。'
-      : '真实接口与读卡器尚未接入。',
+      : '真实接口与读卡器尚未接入。'),
   }
 }
 

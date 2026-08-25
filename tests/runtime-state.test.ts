@@ -11,6 +11,7 @@ describe('createRuntimeState', () => {
       platform: 'macOS',
       backend: '未装配',
       reader: '未装配',
+      session: { status: '未登录' },
       message: 'macOS 开发阶段：真实接口与读卡器将在 Windows 阶段接入。',
     })
     expect(JSON.stringify(state)).not.toMatch(/token|key|secret|serial/i)

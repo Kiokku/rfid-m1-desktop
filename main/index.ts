@@ -2,10 +2,15 @@ import { app, BrowserWindow, ipcMain } from 'electron'
 import { fileURLToPath } from 'node:url'
 import path from 'node:path'
 
-import { createRuntimeState, runtimeStateChannel } from '../shared/runtime-state.js'
+import { runtimeStateChannel } from '../shared/runtime-state.js'
+import { createDevelopmentBackend } from './backend-assembly.js'
+import { DesktopSession } from './desktop-session.js'
 import { createSecureWebPreferences } from './window-options.js'
 
 const currentDirectory = path.dirname(fileURLToPath(import.meta.url))
+const loginChannel = 'rfid-desktop:login'
+const logoutChannel = 'rfid-desktop:logout'
+let desktopSession: DesktopSession
 
 function createWindow() {
   const window = new BrowserWindow({
@@ -29,13 +34,21 @@ function createWindow() {
 }
 
 app.whenReady().then(() => {
-  const runtimeState = createRuntimeState({ isPackaged: app.isPackaged, platform: process.platform })
-  ipcMain.handle(runtimeStateChannel, () => runtimeState)
+  const environment = { isPackaged: app.isPackaged, platform: process.platform }
+  const backend = createDevelopmentBackend(environment)
+  desktopSession = new DesktopSession(backend, environment)
+  ipcMain.handle(runtimeStateChannel, () => desktopSession.getRuntimeState())
+  ipcMain.handle(loginChannel, (_event, request) => desktopSession.login(request))
+  ipcMain.handle(logoutChannel, () => desktopSession.logout())
   createWindow()
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow()
   })
+})
+
+app.on('before-quit', () => {
+  desktopSession?.clear()
 })
 
 app.on('window-all-closed', () => {
