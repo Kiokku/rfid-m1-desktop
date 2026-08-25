@@ -10,6 +10,8 @@ import { createSecureWebPreferences } from './window-options.js'
 const currentDirectory = path.dirname(fileURLToPath(import.meta.url))
 const loginChannel = 'rfid-desktop:login'
 const logoutChannel = 'rfid-desktop:logout'
+const listCustomersChannel = 'rfid-desktop:list-customers'
+const registerCustomerChannel = 'rfid-desktop:register-customer'
 let desktopSession: DesktopSession
 
 function createWindow() {
@@ -40,6 +42,8 @@ app.whenReady().then(() => {
   ipcMain.handle(runtimeStateChannel, () => desktopSession.getRuntimeState())
   ipcMain.handle(loginChannel, (_event, request) => desktopSession.login(request))
   ipcMain.handle(logoutChannel, () => desktopSession.logout())
+  ipcMain.handle(listCustomersChannel, (_event, query) => desktopSession.listCustomers(query))
+  ipcMain.handle(registerCustomerChannel, (_event, request) => desktopSession.registerCustomer(request))
   createWindow()
 
   app.on('activate', () => {

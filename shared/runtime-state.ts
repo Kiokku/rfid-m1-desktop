@@ -1,11 +1,13 @@
 export type RuntimeState = {
   build: 'development' | 'production'
   platform: 'macOS' | 'Windows' | '其他系统'
-  backend: 'MockBackendClient（仅开发）' | '未装配'
+  backend: BackendState
   reader: '未装配'
   session: SessionState
   message: string
 }
+
+export type BackendState = 'MockBackendClient（仅开发）' | '真实后端' | '未装配'
 
 export type SessionState =
   | { status: '未登录' }

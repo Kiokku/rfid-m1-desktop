@@ -1,5 +1,6 @@
 import { type FormEvent, useEffect, useState } from 'react'
 
+import { formatRfidCustomerId, type Customer } from '../shared/customer.js'
 import type { RuntimeState } from '../shared/runtime-state.js'
 import { navigationItems, type Section, workbenchSteps } from './ui-contract.js'
 
@@ -108,6 +109,49 @@ function Workbench({ runtimeState }: { runtimeState: RuntimeState }) {
 
 function Customers({ runtimeState }: { runtimeState: RuntimeState }) {
   const phase = runtimeState.platform === 'macOS' ? 'macOS 开发阶段' : '开发阶段'
+  const [customers, setCustomers] = useState<Customer[]>([])
+  const [query, setQuery] = useState('')
+  const [selectedCustomerId, setSelectedCustomerId] = useState<number | undefined>()
+  const [isRegistrationOpen, setIsRegistrationOpen] = useState(false)
+  const [registrationKey, setRegistrationKey] = useState('')
+  const [name, setName] = useState('')
+  const [contact, setContact] = useState('')
+  const [message, setMessage] = useState('正在读取客户资料…')
+
+  async function loadCustomers(nextQuery: string) {
+    if (!window.rfidDesktop) return
+    const result = await window.rfidDesktop.listCustomers(nextQuery)
+    setCustomers(result.customers)
+    setMessage(result.message)
+    setSelectedCustomerId((current) => current ?? result.customers[0]?.customerId)
+  }
+
+  useEffect(() => {
+    void loadCustomers('')
+  }, [])
+
+  async function registerCustomer(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    if (!window.rfidDesktop || !registrationKey) return
+    const result = await window.rfidDesktop.registerCustomer({ name, contact, idempotencyKey: registrationKey })
+    setMessage(result.message)
+    if (!result.customer) return
+
+    setName('')
+    setContact('')
+    setRegistrationKey('')
+    setQuery('')
+    setIsRegistrationOpen(false)
+    setSelectedCustomerId(result.customer.customerId)
+    await loadCustomers('')
+  }
+
+  function openRegistration() {
+    setRegistrationKey(crypto.randomUUID())
+    setIsRegistrationOpen(true)
+  }
+
+  const selectedCustomer = customers.find((customer) => customer.customerId === selectedCustomerId) ?? customers[0]
 
   return <>
     <section className="step-panel">
@@ -117,13 +161,13 @@ function Customers({ runtimeState }: { runtimeState: RuntimeState }) {
       <div className="side-note">接入后只展示客户编号、状态和固定密钥版本；密钥材料始终不向界面展示。</div>
     </section>
     <main className="customers-workspace">
-      <header><div><p>云平台客户资料</p><h2>客户管理</h2></div><button className="primary-button" disabled>＋ 注册客户</button></header>
-      <label className="search">查询客户<input disabled placeholder="名称或 RFID 客户编号" /></label>
-      <section className="empty-customers"><Icon name="users" /><h3>等待客户接口接入</h3><p>登录已使用 MockBackendClient；客户查询与注册将在后续 ticket 中启用。</p></section>
+      <header><div><p>云平台客户资料</p><h2>客户管理</h2></div><button className="primary-button" onClick={openRegistration}>＋ 注册客户</button></header>
+      <div className="customer-toolbar"><label className="search">查询客户<input value={query} onChange={(event) => { const value = event.target.value; setQuery(value); void loadCustomers(value) }} placeholder="名称或 RFID 客户编号" /></label><span>{message}</span></div>
+      {customers.length ? <section className="customer-table"><div className="customer-table-head"><span>客户名称</span><span>RFID 客户编号</span><span>云平台标识</span><span>状态</span></div>{customers.map((customer) => <button className={customer.customerId === selectedCustomer?.customerId ? 'selected-customer' : ''} key={customer.customerId} onClick={() => setSelectedCustomerId(customer.customerId)}><span><b>{customer.name}</b><small>{customer.contact}</small></span><span className="mono-cell">{formatRfidCustomerId(customer.customerId)}</span><span className="mono-cell">{customer.cloudCustomerId}</span><span className="customer-ready">{customer.status}</span></button>)}</section> : <section className="empty-customers"><Icon name="users" /><h3>未找到客户</h3><p>可调整查询条件或注册新客户。</p></section>}
+      {isRegistrationOpen && <form className="registration-form" onSubmit={registerCustomer}><div><p>新客户</p><h3>注册到云平台并初始化 RFID 映射</h3></div><label>客户名称<input aria-label="新客户名称" autoFocus value={name} onChange={(event) => setName(event.target.value)} placeholder="例如：华南售后服务中心" /></label><label>联系人<input aria-label="联系人" value={contact} onChange={(event) => setContact(event.target.value)} placeholder="姓名 · 手机号" /></label><div className="form-actions"><button className="text-button" type="button" onClick={() => { setIsRegistrationOpen(false); setRegistrationKey('') }}>取消</button><button className="primary-button" disabled={!name.trim()} type="submit">确认注册</button></div></form>}
     </main>
     <aside className="detail-panel">
-      <h2>客户详情</h2><div className="customer-avatar">客</div><h3>尚未选择客户</h3>
-      <dl><dt>RFID 客户编号</dt><dd>—</dd><dt>云平台标识</dt><dd>—</dd><dt>密钥版本</dt><dd>固定版本 1</dd><dt>注册状态</dt><dd>等待后端接入</dd></dl>
+      <h2>客户详情</h2><div className="customer-avatar">客</div>{selectedCustomer ? <><h3>{selectedCustomer.name}</h3><p className="customer-contact">{selectedCustomer.contact}</p><dl><dt>RFID 客户编号</dt><dd>{formatRfidCustomerId(selectedCustomer.customerId)}</dd><dt>云平台标识</dt><dd>{selectedCustomer.cloudCustomerId}</dd><dt>密钥版本</dt><dd>固定版本 {selectedCustomer.keyVersion}</dd><dt>注册状态</dt><dd className="success-text">{selectedCustomer.status}</dd></dl><div className="customer-panel-note">可用于后续授权与储值；密钥材料不向界面展示。</div></> : <><h3>尚未选择客户</h3><dl><dt>RFID 客户编号</dt><dd>—</dd><dt>云平台标识</dt><dd>—</dd><dt>密钥版本</dt><dd>固定版本 1</dd><dt>注册状态</dt><dd>—</dd></dl></>}
     </aside>
   </>
 }
