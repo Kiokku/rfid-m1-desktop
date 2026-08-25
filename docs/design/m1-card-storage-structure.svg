@@ -1,0 +1,126 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="980" viewBox="0 0 1600 980" role="img" aria-labelledby="title description">
+  <title id="title">MIFARE S50 M1 卡存储结构与业务扇区权限</title>
+  <desc id="description">展示 S50 卡的 16 个扇区、业务扇区 1 的四个块，以及客户 Key A、工厂 Key B 与访问控制位的关系。</desc>
+  <style>
+    .bg { fill: #f7f9fc; }
+    .title { font: 700 32px 'Microsoft YaHei', Arial, sans-serif; fill: #10233f; }
+    .subtitle { font: 400 17px 'Microsoft YaHei', Arial, sans-serif; fill: #52657d; }
+    .section { font: 700 20px 'Microsoft YaHei', Arial, sans-serif; fill: #193458; }
+    .label { font: 600 16px 'Microsoft YaHei', Arial, sans-serif; fill: #17304f; }
+    .small { font: 400 14px 'Microsoft YaHei', Arial, sans-serif; fill: #46607d; }
+    .tiny { font: 400 12px 'Microsoft YaHei', Arial, sans-serif; fill: #46607d; }
+    .card { fill: #ffffff; stroke: #c7d4e4; stroke-width: 2; }
+    .selected { fill: #e8f2ff; stroke: #1976d2; stroke-width: 2; }
+    .trailer { fill: #fff3df; stroke: #e6a23c; stroke-width: 2; }
+    .keya { fill: #e7f7ee; stroke: #23925d; stroke-width: 2; }
+    .keyb { fill: #f4eafe; stroke: #8b5cc7; stroke-width: 2; }
+    .rule { fill: #fff8e9; stroke: #dfae43; stroke-width: 2; }
+    .muted { fill: #edf1f6; stroke: #c8d2df; stroke-width: 1.5; }
+    .line { stroke: #758aa5; stroke-width: 2; fill: none; marker-end: url(#arrow); }
+    .dashed { stroke: #758aa5; stroke-width: 2; fill: none; stroke-dasharray: 7 6; marker-end: url(#arrow); }
+  </style>
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L0,6 L9,3 z" fill="#758aa5"/>
+    </marker>
+  </defs>
+
+  <rect class="bg" width="1600" height="980"/>
+  <text x="70" y="66" class="title">MIFARE S50 / F08 M1 卡：存储结构与密钥权限</text>
+  <text x="70" y="98" class="subtitle">ISO/IEC 14443A · 8 Kbit EEPROM · 16 个扇区 × 4 块/扇区 · 每块 16 字节</text>
+
+  <text x="70" y="154" class="section">1. 整张卡：16 个独立安全扇区</text>
+  <rect x="70" y="180" width="400" height="650" rx="22" class="card"/>
+  <text x="104" y="218" class="label">绝对块地址 0 - 63</text>
+  <text x="104" y="244" class="small">每个扇区：3 个数据块 + 1 个扇区尾块</text>
+
+  <rect x="105" y="275" width="330" height="80" rx="10" class="muted"/>
+  <text x="128" y="307" class="label">扇区 0 · 块 0 - 3</text>
+  <text x="128" y="333" class="small">块 0 为厂家 UID / 厂商数据，不能改写</text>
+
+  <rect x="105" y="375" width="330" height="100" rx="10" class="selected"/>
+  <text x="128" y="409" class="label">扇区 1 · 块 4 - 7</text>
+  <text x="128" y="437" class="small">本方案的墨盒业务扇区</text>
+  <text x="128" y="461" class="tiny">独立 Key A、访问控制位、Key B</text>
+
+  <rect x="105" y="495" width="330" height="80" rx="10" class="muted"/>
+  <text x="128" y="527" class="label">扇区 2 - 14 · 块 8 - 59</text>
+  <text x="128" y="553" class="small">预留，不用于第一版业务</text>
+
+  <rect x="105" y="595" width="330" height="80" rx="10" class="muted"/>
+  <text x="128" y="627" class="label">扇区 15 · 块 60 - 63</text>
+  <text x="128" y="653" class="small">预留</text>
+
+  <rect x="105" y="710" width="330" height="75" rx="10" class="rule"/>
+  <text x="128" y="741" class="label">核心规则</text>
+  <text x="128" y="766" class="small">跨扇区访问必须重新认证</text>
+
+  <path d="M470 425 C535 425, 548 318, 608 318" class="line"/>
+  <text x="500" y="398" class="small">展开扇区 1</text>
+
+  <text x="620" y="154" class="section">2. 业务扇区 1：块 4 - 7</text>
+  <rect x="620" y="180" width="490" height="650" rx="22" class="card"/>
+  <text x="654" y="218" class="label">4 个 16 字节块</text>
+  <text x="932" y="218" class="small">绝对地址</text>
+
+  <rect x="654" y="248" width="420" height="104" rx="10" class="selected"/>
+  <text x="680" y="283" class="label">块 4 · 墨盒身份资料</text>
+  <text x="680" y="310" class="small">INK1、格式版本、客户 ID、64 位墨盒编号（低 56 位）</text>
+  <text x="680" y="335" class="tiny">访问条件 100：A/B 读；仅 B 写</text>
+  <text x="1013" y="300" class="label">4</text>
+
+  <rect x="654" y="368" width="420" height="104" rx="10" class="selected"/>
+  <text x="680" y="403" class="label">块 5 · 可喷码次数值块</text>
+  <text x="680" y="430" class="small">使用初始化值、读值、减值命令维护余额</text>
+  <text x="680" y="455" class="tiny">访问条件 110：A/B 读和减值；仅 B 写和加值</text>
+  <text x="1013" y="420" class="label">5</text>
+
+  <rect x="654" y="488" width="420" height="104" rx="10" class="selected"/>
+  <text x="680" y="523" class="label">块 6 · 授权元数据</text>
+  <text x="680" y="550" class="small">密钥版本、墨盒编号高 8 位、UID、CRC32</text>
+  <text x="680" y="575" class="tiny">访问条件 100：A/B 读；仅 B 写</text>
+  <text x="1013" y="540" class="label">6</text>
+
+  <rect x="654" y="608" width="420" height="166" rx="10" class="trailer"/>
+  <text x="680" y="643" class="label">块 7 · 扇区尾块（安全控制）</text>
+  <rect x="680" y="662" width="114" height="74" rx="7" class="keya"/>
+  <text x="704" y="692" class="label">Key A</text>
+  <text x="692" y="717" class="tiny">6 字节客户密钥</text>
+  <rect x="808" y="662" width="138" height="74" rx="7" class="rule"/>
+  <text x="825" y="692" class="label">访问控制位</text>
+  <text x="824" y="717" class="tiny">3 字节 + 1 字节</text>
+  <rect x="960" y="662" width="90" height="74" rx="7" class="keyb"/>
+  <text x="980" y="692" class="label">Key B</text>
+  <text x="972" y="717" class="tiny">6 字节</text>
+  <text x="680" y="758" class="tiny">尾块访问条件 011：Key A/Key B 均不可读；仅 Key B 可改写密钥与控制位</text>
+  <text x="1013" y="668" class="label">7</text>
+
+  <text x="1170" y="154" class="section">3. 谁能做什么</text>
+  <rect x="1170" y="180" width="360" height="226" rx="18" class="keya"/>
+  <text x="1200" y="222" class="label">客户 Key A（喷码机持有）</text>
+  <text x="1200" y="256" class="small">• 认证扇区 1</text>
+  <text x="1200" y="284" class="small">• 读取块 4、5、6</text>
+  <text x="1200" y="312" class="small">• 在喷码成功回调后对块 5 减值</text>
+  <text x="1200" y="352" class="small">✕ 不能写身份资料、加值或改尾块</text>
+  <text x="1200" y="380" class="tiny">客户统一密钥；不保存于卡内普通数据块</text>
+
+  <rect x="1170" y="454" width="360" height="246" rx="18" class="keyb"/>
+  <text x="1200" y="496" class="label">工厂 Key B（授权工作站持有）</text>
+  <text x="1200" y="530" class="small">• 初始化值块，写入或加值块 5</text>
+  <text x="1200" y="558" class="small">• 写入块 4、6 的身份与元数据</text>
+  <text x="1200" y="586" class="small">• 写入 Key A、Key B 与访问控制位</text>
+  <text x="1200" y="626" class="small">• 每卡唯一：由工厂根密钥 + 墨盒编号派生</text>
+  <text x="1200" y="654" class="tiny">喷码机不保存 Key B 或工厂根密钥</text>
+
+  <path d="M1170 295 C1130 295, 1126 420, 1078 420" class="line"/>
+  <path d="M1170 570 C1133 570, 1126 690, 1078 690" class="line"/>
+
+  <rect x="1170" y="742" width="360" height="88" rx="14" class="rule"/>
+  <text x="1200" y="776" class="label">访问控制位的作用</text>
+  <text x="1200" y="804" class="small">它们定义每个块由 Key A、Key B 可执行的</text>
+  <text x="1200" y="825" class="small">读、写、加值、减值和尾块管理操作。</text>
+
+  <line x1="70" y1="884" x2="1530" y2="884" stroke="#c7d4e4" stroke-width="2"/>
+  <text x="70" y="918" class="small">重要：M1/F08 的 UID 不是防伪凭据；Key A/B 与访问控制位只构成离线访问控制，不能替代高安全防克隆方案。</text>
+  <text x="70" y="948" class="tiny">依据：《Mifare1+S50IC卡中文说明书》中的存储结构、数据块访问条件和扇区尾块访问条件；业务块地址为本项目方案约定。</text>
+</svg>

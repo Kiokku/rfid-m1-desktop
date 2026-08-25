@@ -1,0 +1,80 @@
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+通信协议格式规范
+
+
+Version: V 1.0.1
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+定义与声明
+A. 文中数字除在 10 进制数后加(dec)表示外，其余为 16 进制表示
+B. 用高位字节在前低位字节在后的方式来表示整数
+命令与应答结构
+命令
+Field STX INX LEN DEVICE CMD DATA CHK
+Detail STX Index LH  LL  DH  DL  CH  CL  D1/D2/../Dn Xor
+Size(byte) 1(dec) 1(dec) 2(dec) 2(dec) 2(dec) n(dec) 1(dec)
+
+字段说明：
+
+STX：报文字头，STX 固定为 AA
+INX：发送该命令的序号（范围 00-FF，每次都递增）
+LEN：报文内容长度，为 DEVICE+ CMD+DATA 的长度之和; LH 高位字节，LL 低位字节;
+DEVICE: 设备地址，默认为 0000;
+CMD：指令代码;
+DATA：用户数据域;
+CHK：报文校验位，对 INX , LEN,DEVICE, CMD, DATA这几部分域连续做异或校验;
+应答
+Field STX INX LEN DEVICE CMD STATUS DATA CHK
+Detail STX Index LH  LL  DH  DL  CH  CL  status D1/D2/../Dn Xor
+Size(byte) 1(dec) 1(dec) 2(dec) 2(dec) 2(dec) 1(dec) n(dec) 1(dec)
+
+字段说明：
+
+STX：同如上命令字段中的 STX;
+INX：同如上命令字段中的 INX;
+LEN：DEVICE+CMD+STATUS+DATA 的长度; LH 高位字节，LL 低位字节;
+DEVICE: 同如上命令字段中的 DEVICE;
+CMD: 同如上命令字段中的 CMD;
+STATUS：指令执行状态;
+DATA：应答数据域;
+
+CHK：报文校验位，对 INX,LEN,DEVICE,CMD,STATUS,DATA 这几部分域做异或校验
