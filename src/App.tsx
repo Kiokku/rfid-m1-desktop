@@ -84,7 +84,7 @@ function Workbench({ runtimeState }: { runtimeState: RuntimeState }) {
       </div>)}
     </section>
     <main className="workspace">
-      <header><div><p>当前任务</p><h2>授权 M1 墨盒卡</h2></div><ReaderStatus /></header>
+      <header><div><p>当前操作</p><h2>授权 M1 墨盒卡</h2></div><ReaderStatus /></header>
       <section className="reader-stage">
         <div className="corner top-left" /><div className="corner top-right" /><div className="corner bottom-left" /><div className="corner bottom-right" />
         <div className="reader-device"><i /><div><Icon name="rfid" /><b>RFID</b></div></div>
@@ -99,8 +99,8 @@ function Workbench({ runtimeState }: { runtimeState: RuntimeState }) {
       </section>
     </main>
     <aside className="detail-panel">
-      <h2>任务详情</h2>
-      <dl><dt>任务编号</dt><dd>尚未创建</dd><dt>卡片 UID</dt><dd>等待读卡器接入</dd><dt>当前结果</dt><dd>待处理</dd><dt>密钥材料</dt><dd>不向界面暴露</dd></dl>
+      <h2>操作详情</h2>
+      <dl><dt>本地操作编号</dt><dd>尚未生成</dd><dt>卡片 UID</dt><dd>等待读卡器接入</dd><dt>当前结果</dt><dd>待处理</dd><dt>密钥材料</dt><dd>不向界面暴露</dd></dl>
       <h3>阶段说明</h3>
       <div className="notice"><Icon name="alert" /><span>已通过 {runtimeState.backend} 登录；读卡器与后续业务接口仍未装配。</span></div>
     </aside>

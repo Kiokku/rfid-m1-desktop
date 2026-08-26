@@ -10,7 +10,7 @@ RFID M1 授权加密桌面端采用 Electron + TypeScript + React + Vite，目�
 
 ## Consequences
 
-- 串口、HTTPS、云平台 token、任务密钥和业务编排只在 Electron 主进程运行；React renderer 只通过窄 IPC 发起操作并接收非敏感状态。
+- 串口、HTTPS、云平台 token、短时密钥材料和业务编排只在 Electron 主进程运行；React renderer 只通过窄 IPC 发起操作并接收非敏感状态。
 - `BackendClient` 提供真实实现与内存 `MockBackendClient`；`ReaderPort` 只提供真实 Node SerialPort 实现，不建设应用级 `MockReader`。macOS 阶段不装配读卡器端口，只用固定字节帧验证 `AA` 协议编解码；真实接口和真实读卡器从 Windows 阶段开始。后端模拟实现只进入开发构建，生产构建不得启用。
-- 云平台使用用户名密码接口登录，token 不持久化，每次启动重新登录；密钥使用主进程 `Buffer`，禁止字符串化、IPC 传递、日志或落盘，并在任务结束时覆零已知缓冲区。
+- 云平台使用用户名密码接口登录，token 不持久化，每次启动重新登录；密钥使用主进程 `Buffer`，禁止字符串化、IPC 传递、日志或落盘，并在操作结束时覆零已知缓冲区。
 - Electron Forge 的 Squirrel.Windows maker 生成 Windows `Setup.exe`；第一版人工安装和升级，不开发自动更新，也不支持 Windows 7/8、32 位、ARM、厂商 SDK/DLL 或 Web Serial 主路径。

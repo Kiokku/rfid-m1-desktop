@@ -14,7 +14,7 @@ const initialCustomerRecords: CustomerRecord[] = [
 ]
 
 const seedLogs = [
-  { time: '10:24:18', text: 'MockBackend：已创建内存授权任务', tone: 'neutral' },
+  { time: '10:24:18', text: 'MockBackend：已返回短时密钥材料', tone: 'neutral' },
   { time: '10:24:21', text: 'MockReader：模拟读卡器已连接', tone: 'success' },
 ]
 
@@ -91,20 +91,20 @@ export function App() {
 
   function runTask() {
     if (readerState === '待放卡') {
-      addLog('请先放置墨盒卡，再创建操作任务', 'warning')
+      addLog('请先放置墨盒卡，再执行操作', 'warning')
       return
     }
     setReaderState('写入中')
-    addLog(`MockBackend：创建${operation}任务，客户 ${customer}`, 'neutral')
+    addLog(`MockBackend：已取得${operation}所需密钥材料，客户 ${customer}`, 'neutral')
     window.setTimeout(() => {
       if (scenario === '正常完成') {
-        setReaderState('已完成'); setResult('成功'); addLog(`MockReader：${operation}、回读验收与内存任务提交完成`, 'success')
+        setReaderState('已完成'); setResult('成功'); addLog(`MockReader：${operation}与本地回读验收完成`, 'success')
       } else if (scenario === '写卡失败') {
         setReaderState('异常'); setResult('失败'); addLog('MockReader：写卡失败，未越过不可逆切换点', 'danger')
       } else if (scenario === '读卡器断连') {
-        setReaderState('异常'); setResult('失败'); addLog('MockReader：串口断连，任务未完成', 'danger')
+        setReaderState('异常'); setResult('失败'); addLog('MockReader：串口断连，操作未完成', 'danger')
       } else {
-        setReaderState('异常'); setResult('结果不确定'); addLog(scenario === '移卡' ? 'MockReader：写入后移卡，无法完成回读验收' : 'MockBackend：写入后提交中断，结果不确定', 'warning')
+        setReaderState('异常'); setResult('结果不确定'); addLog(scenario === '移卡' ? 'MockReader：写入后移卡，无法完成回读验收' : 'MockReader：写入后无法确认本地回读结果', 'warning')
       }
     }, 520)
   }
@@ -125,8 +125,8 @@ export function App() {
     addLog(`MockBackend：客户 ${record.name} 已注册并分配 RFID 客户编号`, 'success')
   }
 
-  const taskId = useMemo(() => `AUTH-${String(count).padStart(4, '0')}-0724`, [count])
-  const props = { operation, setOperation, customer, setCustomer, availableCustomers: customerRecords.map((record) => record.name), count, setCount, scenario, setScenario, readerState, result, logs, detectCard, runTask, taskId, activeSection, setActiveSection, customerRecords, customerSearch, setCustomerSearch, isRegistrationOpen, setIsRegistrationOpen, newCustomerName, setNewCustomerName, newCustomerContact, setNewCustomerContact, registerCustomer }
+  const operationId = useMemo(() => `OP-${String(count).padStart(4, '0')}-0724`, [count])
+  const props = { operation, setOperation, customer, setCustomer, availableCustomers: customerRecords.map((record) => record.name), count, setCount, scenario, setScenario, readerState, result, logs, detectCard, runTask, operationId, activeSection, setActiveSection, customerRecords, customerSearch, setCustomerSearch, isRegistrationOpen, setIsRegistrationOpen, newCustomerName, setNewCustomerName, newCustomerContact, setNewCustomerContact, registerCustomer }
 
   return <main className="app-shell variant-a">
     <VariantA {...props} />
@@ -144,11 +144,11 @@ function TaskControls({ operation, setOperation, customer, setCustomer, availabl
   </div>
 }
 
-function ResultPanel({ result, logs, taskId }: { result: Result; logs: any[]; taskId: string }) {
+function ResultPanel({ result, logs, operationId }: { result: Result; logs: any[]; operationId: string }) {
   const uncertain = result === '结果不确定'
   return <aside className={`result-panel ${uncertain ? 'uncertain' : result === '成功' ? 'success-result' : ''}`}>
-    <h2>{uncertain ? '结果判定与处置' : '任务详情'}</h2>
-    {uncertain ? <><div className="uncertain-box"><Icon name="alert" size={36} /><div><strong>结果不确定</strong><p>回读验收或结果提交未完成。不得再次操作。</p></div></div><ol><li><b>贴标</b><span>标记“结果不确定”</span></li><li><b>退出流转</b><span>交由人工保管或报废</span></li></ol><button className="warning-button">确认贴标并退出流转</button></> : <><dl><dt>任务编号</dt><dd>{taskId}</dd><dt>卡片 UID</dt><dd>04 A1 B2 C3 D4</dd><dt>当前结果</dt><dd className={result === '成功' ? 'success-text' : ''}>{result}</dd><dt>密钥材料</dt><dd>不向界面暴露</dd></dl><h3>操作日志</h3><LogList logs={logs} compact /></>}
+    <h2>{uncertain ? '结果判定与处置' : '操作详情'}</h2>
+    {uncertain ? <><div className="uncertain-box"><Icon name="alert" size={36} /><div><strong>结果不确定</strong><p>本地回读验收未完成。不得再次操作。</p></div></div><ol><li><b>贴标</b><span>标记“结果不确定”</span></li><li><b>退出流转</b><span>交由人工保管或报废</span></li></ol><button className="warning-button">确认贴标并退出流转</button></> : <><dl><dt>本地操作编号</dt><dd>{operationId}</dd><dt>卡片 UID</dt><dd>04 A1 B2 C3 D4</dd><dt>当前结果</dt><dd className={result === '成功' ? 'success-text' : ''}>{result}</dd><dt>密钥材料</dt><dd>不向界面暴露</dd></dl><h3>操作日志</h3><LogList logs={logs} compact /></>}
   </aside>
 }
 
@@ -164,7 +164,7 @@ function CustomerWorkspace(props: any) {
 
 function CustomerPanel({ customerRecords, customer, logs }: { customerRecords: CustomerRecord[]; customer: string; logs: any[] }) {
   const record = customerRecords.find((item) => item.name === customer) ?? customerRecords[0]
-  return <aside className="customer-panel"><h2>客户详情</h2><div className="customer-avatar">客</div><h3>{record.name}</h3><p>{record.contact}</p><dl><dt>RFID 客户编号</dt><dd>{record.rfidId}</dd><dt>云平台标识</dt><dd>{record.cloudId}</dd><dt>密钥版本</dt><dd>固定版本 1</dd><dt>注册状态</dt><dd className="success-text">{record.status}</dd></dl><div className="customer-panel-note"><Icon name="check" size={17} /><span>可用于新建授权与储值任务<br />密钥材料不向界面展示</span></div><h3>最近操作</h3><LogList logs={logs} compact /></aside>
+  return <aside className="customer-panel"><h2>客户详情</h2><div className="customer-avatar">客</div><h3>{record.name}</h3><p>{record.contact}</p><dl><dt>RFID 客户编号</dt><dd>{record.rfidId}</dd><dt>云平台标识</dt><dd>{record.cloudId}</dd><dt>密钥版本</dt><dd>固定版本 1</dd><dt>注册状态</dt><dd className="success-text">{record.status}</dd></dl><div className="customer-panel-note"><Icon name="check" size={17} /><span>可用于授权与储值操作<br />密钥材料不向界面展示</span></div><h3>最近操作</h3><LogList logs={logs} compact /></aside>
 }
 
 function VariantA(props: any) {
@@ -175,7 +175,7 @@ function VariantA(props: any) {
   return <div className="wizard-layout">
     <aside className="dark-sidebar"><div className="brand"><Icon name="rfid" size={30} /><span>RFID M1<br />授权工位</span></div><nav>{navItems.map(([icon, label, section]) => <button className={section === props.activeSection ? 'nav-active' : ''} onClick={() => section && props.setActiveSection(section)} key={label}><Icon name={icon} />{label}</button>)}</nav><div className="sidebar-reader"><StatusDot readerState={props.readerState} /><small>Virtual M1 Reader 01</small></div></aside>
     <section className="wizard-steps">{isCustomerPage ? <><h1>客户管理</h1><p>云平台资料 · 开发替身</p><div className="customer-side-step current"><i>1</i><div><b>查看客户</b><span>查询并选择客户资料</span></div></div><div className="customer-side-step"><i>2</i><div><b>注册客户</b><span>创建云平台映射</span></div></div><div className="customer-side-note">注册成功后，系统只展示客户编号、状态和固定密钥版本；不展示密钥材料。</div></> : <><h1>墨盒操作</h1><p>受控工位 · 开发替身</p>{steps.map((step, index) => <div className={`step ${index + 1 === current ? 'current' : index + 1 < current ? 'done' : ''}`} key={step}><i>{index + 1}</i><div><b>{step}</b><span>{index + 1 < current ? '已完成' : index + 1 === current ? '进行中' : '待进行'}</span></div></div>)}</>}</section>
-    {isCustomerPage ? <CustomerWorkspace {...props} /> : <section className="wizard-main"><header><div><p>当前任务</p><h2>{props.operation} M1 墨盒卡</h2></div><StatusDot readerState={props.readerState} /></header><ReaderStage readerState={props.readerState} onDetect={props.detectCard} conceptDevice /><div className="wizard-bottom"><TaskControls {...props} compact /></div></section>}
-    {isCustomerPage ? <CustomerPanel customerRecords={props.customerRecords} customer={props.customer} logs={props.logs} /> : <ResultPanel result={props.result} logs={props.logs} taskId={props.taskId} />}
+    {isCustomerPage ? <CustomerWorkspace {...props} /> : <section className="wizard-main"><header><div><p>当前操作</p><h2>{props.operation} M1 墨盒卡</h2></div><StatusDot readerState={props.readerState} /></header><ReaderStage readerState={props.readerState} onDetect={props.detectCard} conceptDevice /><div className="wizard-bottom"><TaskControls {...props} compact /></div></section>}
+    {isCustomerPage ? <CustomerPanel customerRecords={props.customerRecords} customer={props.customer} logs={props.logs} /> : <ResultPanel result={props.result} logs={props.logs} operationId={props.operationId} />}
   </div>
 }
